@@ -12,8 +12,8 @@ public class AnalyticsCounter {
 	
 	/**
 	 * Trend analysis program, read a symptom's file, count the occurrences of three
-	 * symptom's type and write the result in a text file. POO code version
-	 * continued .
+	 * symptom's type and write the result in a text file. This is the start of the
+	 * OOP version of the code.
 	 * 
 	 * @param args not used
 	 * @throws FileNotFoundException the symptom file does not exist or cannot be
@@ -21,30 +21,36 @@ public class AnalyticsCounter {
 	 * @throws EOFException          end of file reached
 	 * @throws IOException           other i/o file operation errors
 	 */
-	public static void main(String args[]) {
+	public static void main(String args[]) throws Exception {
+
+		// reading symptom's file and return symptom list with duplicate elements
+		ReadSymptomDataFromFile objSymptomFile = new ReadSymptomDataFromFile("symptoms.txt");
+		List<String> symptomList = objSymptomFile.getSymptoms();
+
+		// create file for results
+		FileWriter writer = new FileWriter("results.out");
+
+		// get symptom/number of occurrences pairs from symptom list
+		Map<String, Integer> sMap = getKeyValueList(symptomList);
 
 		try {
-			// reading symptom's file and return symptom list with duplicate elements
-			ReadSymptomDataFromFile objSymptomFile = new ReadSymptomDataFromFile("symptoms.txt");
-			List<String> symptomList = objSymptomFile.getSymptoms();
 
-			// get symptom/number of occurrences pairs from symptom list
-			Map<String, Integer> symptomOccurrenceMap = getKeyValueList(symptomList);
+			// record count result
+			for (String symptom : sMap.keySet()) {
+				writer.write(symptom + " " + sMap.get(symptom) + "\n");
+			}
 
-			// create file for results
-			writeResultsDataToFile(symptomOccurrenceMap);
 
 		} catch (FileNotFoundException e) {
-			System.out.println("Attention le fichier des symptômes est introuvable!");
-			e.printStackTrace();
+			System.out.println("Attention le fichier des symptômes n'existe pas ou est introuvable!");
 		} catch (EOFException e) {
-			System.out.println("Fin de fichier atteinte!");
-			e.printStackTrace();
+			System.out.println("Fin de fichier atteinte");
 		} catch (IOException e) {
-			System.out.println("Problème sur le fichier des symptômes " + e.getMessage());
-			e.printStackTrace();
+			System.out.println("Problème de lecture/écriture de fichier" + e.getMessage());
+		} finally {
+			if (writer != null)
+				writer.close();
 		}
-
 	}
 
 	/**
@@ -70,29 +76,4 @@ public class AnalyticsCounter {
 		return tmap;
 	}
 
-	/**
-	 * Create a result data file, record each symptom with number of occurrences
-	 * 
-	 * @param symptomOccurence symptom/occurrences ordered list
-	 * @throws IOException i/o file operation errors
-	 */
-	private static void writeResultsDataToFile(Map<String, Integer> symptomOccurence) throws IOException {
-
-		// create file for results
-		FileWriter writer = new FileWriter("results.out");
-		try {
-
-			// write count result
-			for (String symptom : symptomOccurence.keySet()) {
-				writer.write(symptom + " " + symptomOccurence.get(symptom) + "\n");
-			}
-
-		} catch (IOException e) {
-			System.out.println("Problème sur le fichier des des résultats :" + e.getMessage());
-			e.printStackTrace();
-		} finally {
-			if (writer != null)
-				writer.close();
-		}
-	}
 }
