@@ -1,10 +1,12 @@
 package com.hemebiotech.analytics;
 
 import java.io.BufferedReader;
+import java.io.EOFException;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Simple brute force implementation
@@ -13,35 +15,61 @@ import java.util.List;
 public class ReadSymptomDataFromFile implements ISymptomReader {
 
 	private String filepath;
-	
+
 	/**
 	 * 
-	 * @param filepath a full or partial path to file with symptom strings in it, one per line
+	 * @param filepath a full or partial path to file with symptom strings in it,
+	 *                 one per line
 	 */
-	public ReadSymptomDataFromFile (String filepath) {
+	public ReadSymptomDataFromFile(String filepath) {
 		this.filepath = filepath;
 	}
 	
+	/**
+	 * If no data is available, return an empty List
+	 * 
+	 * @return a ordered listing of all Symptoms/occurrences obtained from a data
+	 *         source, without duplicates element
+	 * @throws FileNotFoundException the symptom file does not exist or cannot be
+	 *                               found
+	 * @throws IOException           other i/o file operation errors
+	 */
 	@Override
-	public List<String> getSymptoms() {
-		ArrayList<String> result = new ArrayList<String>();
+	public Map<String, Integer> getSymptoms() throws IOException {
+
+		// symptom/occurrences's list
+		Map<String, Integer> symptomList = new TreeMap<>();
 		
 		if (filepath != null) {
+
+			// open symptom's file
+			BufferedReader reader = new BufferedReader(new FileReader(filepath));
+			String symptomLine = reader.readLine();
+
 			try {
-				BufferedReader reader = new BufferedReader (new FileReader(filepath));
-				String line = reader.readLine();
 				
-				while (line != null) {
-					result.add(line);
-					line = reader.readLine();
+				while (symptomLine != null) {
+					Integer valeur = symptomList.get(symptomLine);
+					if (valeur == null) // it's new symptom
+						symptomList.put(symptomLine, 1);
+					else {
+						valeur++;
+						symptomList.replace(symptomLine, valeur);
+					}
+					symptomLine = reader.readLine(); // get next symptom
 				}
-				reader.close();
-			} catch (IOException e) {
+
+			} catch (EOFException e) {
+				System.out.println("Fin de fichier atteinte!");
 				e.printStackTrace();
+			} catch (IOException e) {
+				System.out.println("Problème sur le fichier des symptômes " + e.getMessage());
+				e.printStackTrace();
+			} finally {
+				if (reader != null)
+					reader.close();
 			}
 		}
-		
-		return result;
+		return symptomList;
 	}
-
 }
